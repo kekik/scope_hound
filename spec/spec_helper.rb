@@ -15,6 +15,7 @@
 # it.
 #
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+ENV["RAILS_ENV"] ||= "test"
 require File.expand_path("../spec/dummy/config/environment.rb", __dir__)
 ENV["RAILS_ROOT"] ||= File.expand_path("../spec/dummy", __dir__)
 

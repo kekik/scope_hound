@@ -137,12 +137,14 @@ end
 RSpec.describe ScopeHound::FilterableModel do
   describe "required model API" do
     it "raises when the model does not define filter_proxy" do
+      filterable_model = described_class
+
       klass = Class.new do
-        extend described_class
+        extend filterable_model
       end
 
       expect { klass.filter_by(status: "published") }
-        .to raise_error(RuntimeError, /requires filter_proxy method to be defined/)
+        .to raise_error(NotImplementedError, /must define \.filter_proxy/)
     end
   end
 end

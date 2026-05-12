@@ -21,7 +21,7 @@ module ScopeHound
 
         filters.each do |filter_scope, filter_value|
           if filter_value.present? && extended_scope.respond_to?(filter_scope)
-            extended_scope = extended_scope.send(filter_scope, filter_value)
+            extended_scope = extended_scope.public_send(filter_scope, filter_value)
           end
         end
 
@@ -31,15 +31,14 @@ module ScopeHound
       end
 
       def calculate_unique_filter_values(scope)
-        result = {}
-        filter_scopes_module.filter_scopes_paths.each_with_object({}) do |(filter_scope, path)|
-          result[filter_scope] = if path.is_a? Array
-                                   path.flat_map { |p| scope.pluck(p) }.uniq
-                                 else
-                                   scope.pluck(path).uniq
-                                 end
+        filter_scopes_module.filter_scopes_paths.each_with_object({}) do |(filter_scope, path), result|
+          result[filter_scope] =
+            if path.is_a?(Array)
+              path.flat_map { |attribute_path| scope.pluck(attribute_path) }.uniq
+            else
+              scope.pluck(path).uniq
+            end
         end
-        result
       end
     end
   end
