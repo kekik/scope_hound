@@ -6,13 +6,10 @@ module ScopeHound
     extend ActiveSupport::Concern
 
     def filter_proxy
-      raise "
-            Model #{name} including FilterableModel concern requires filter_proxy method to be defined.
-            Method should return filter proxy class associated to model.
-          "
+      raise NotImplementedError,
+            "#{name} must define .filter_proxy to return its filter proxy class."
     end
 
     delegate :filter_by, to: :filter_proxy
   end
 end
-

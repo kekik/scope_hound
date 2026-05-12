@@ -1,37 +1,123 @@
 # ScopeHound
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/scope_hound`. To experiment with that code, run `bin/console` for an interactive prompt.
+`scope_hound` is a Rails filtering gem built around three pieces:
 
-TODO: Delete this and the text above, and describe your gem
+- a model concern that exposes `filter_by`
+- a filter proxy class that applies filter scopes
+- a controller concern that stores the filtered relation and available filter values
+
+The gem is a good fit when you want controller-driven filtering without pushing parameter logic directly into your Active Record models.
 
 ## Installation
 
-Install the gem and add to the application's Gemfile by executing:
+Add the gem to your application:
 
-    $ bundle add scope_hound
+```bash
+bundle add scope_hound
+```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+Or install it directly:
 
-    $ gem install scope_hound
+```bash
+gem install scope_hound
+```
 
-## Usage
+## Basic Usage
 
-TODO: Write usage instructions here
+1. Extend your model with `ScopeHound::FilterableModel`.
+2. Create a filter proxy class that inherits from `ScopeHound::FilterProxy`.
+3. Define filter scopes in a separate module using `ScopeHound::FilterScopable`.
+4. Include `ScopeHound::FilterableController` in your controller and map request params in `filter_params`.
+
+Minimal example:
+
+```ruby
+# app/models/post.rb
+class Post < ApplicationRecord
+  extend ScopeHound::FilterableModel
+
+  class << self
+    def filter_proxy = Filters::PostFilterProxy
+  end
+end
+```
+
+```ruby
+# app/models/filters/post_filter_proxy.rb
+module Filters
+  module PostFilterScopes
+    extend ScopeHound::FilterScopable
+
+    filter_scope :status, ->(value) { where(status: value) }
+    filter_scope :author_id, ->(value) { where(author_id: value) }
+
+    filter_scope_path_for :status
+    filter_scope_path_for :author_id
+  end
+
+  class PostFilterProxy < ScopeHound::FilterProxy
+    def self.query_scope = Post
+    def self.filter_scopes_module = Filters::PostFilterScopes
+  end
+end
+```
+
+```ruby
+# app/controllers/posts_controller.rb
+class PostsController < ApplicationController
+  include ScopeHound::FilterableController
+
+  def index
+    @posts = filter(Post)
+  end
+
+  private
+
+  def filter_params
+    {
+      status: params[:status],
+      author_id: params[:author_id]
+    }
+  end
+end
+```
+
+## How It Works
+
+`Post.filter_by(status: "published")` delegates to the filter proxy. The proxy:
+
+1. extends the base relation with your filter scope module
+2. applies each matching filter method
+3. computes unique values for every registered filter path
+4. returns `[filtered_scope, unique_filter_values]`
+
+The controller concern wraps this and exposes:
+
+- `all_filtered_records`
+- `unique_filters`
+- `filter_values(attribute, all_values, show_all: false)`
+
+## Wiki
+
+A fuller wiki-style usage page is available in [docs/wiki/Using-Scope-Hound.md](docs/wiki/Using-Scope-Hound.md).
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo:
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```bash
+bin/setup
+bundle exec rspec
+```
+
+You can also use `bin/console` to load the gem in an interactive session.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/scope_hound. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/scope_hound/blob/master/CODE_OF_CONDUCT.md).
+Bug reports and pull requests are welcome at:
+
+`https://github.com/kekik/scope_hound`
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
-
-## Code of Conduct
-
-Everyone interacting in the ScopeHound project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/scope_hound/blob/master/CODE_OF_CONDUCT.md).
+Released under the [MIT License](https://opensource.org/licenses/MIT).
