@@ -7,7 +7,7 @@
 # This is particularly useful when you want to have the flexibility of filtering
 # model data directly from controller parameters.
 module ScopeHound
-      # Adds capability of filtering to the controllers
+  # Adds capability of filtering to the controllers
   module FilterableController
     extend ActiveSupport::Concern
     attr_accessor :all_filtered_records, :unique_filters

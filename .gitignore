@@ -13,6 +13,10 @@ Gemfile.lock
 
 # Version Tools
 .tool-versions
+.envrc
+flake.nix
+shell.nix
+.direnv/
 
 # Dummy application
 /spec/dummy/tmp

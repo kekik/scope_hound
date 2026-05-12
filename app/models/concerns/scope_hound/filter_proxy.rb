@@ -44,4 +44,3 @@ module ScopeHound
     end
   end
 end
-

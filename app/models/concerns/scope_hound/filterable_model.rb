@@ -15,4 +15,3 @@ module ScopeHound
     delegate :filter_by, to: :filter_proxy
   end
 end
-
